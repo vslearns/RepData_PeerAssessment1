@@ -1,5 +1,12 @@
-# Reproducible Research: Peer Assessment 1
-A student-submitted project.
+---
+title: Reproducible Research
+author: Peer Assessment 1
+output: 
+  prettydoc::html_pretty:
+    theme: leonids
+    highlight: github
+    keep_md: yes
+---
 
 ## Loading and preprocessing the data
 
