@@ -8,18 +8,94 @@ output:
 
 ## Loading and preprocessing the data
 
+Let's start off by importing some useful libraries.
+```{r}
+library(ggplot2)
+library(plyr)
+```
 
+Next, let's read in the data.
+```{r}
+if (!file.exists("activity.csv")) unzip("activity.zip")
+if (!exists("act_data")) act_data <- read.csv("activity.csv")
+```
+
+Properly, we should have to get rid of all the NA values in our dataset. However, we can safely ignore this step for now.
+
+In terms of preprocessing, we just want to add a weekday column to our dataset. This will help us out in the imputation section.
+```{r}
+act_data$weekday <- tolower(weekdays(as.Date(act_data$date)))
+```
+
+Let's check that our data loaded properly. The first few rows should have NA values for the `steps` column.
+```{r}
+head(act_data)
+```
+
+```{r}
+```
 
 ## What is mean total number of steps taken per day?
 
+The first step here, logically, is to sum up the data per day. Let's do this using the `aggregate` function.
+```{r}
+ad.by_day <- aggregate(steps ~ date, act_data, sum)
+```
 
+Using the `ggplot2` plotting system's `ggplot` function, we create the following histogram.
+```{r}
+ggplot(ad.by_day, aes(steps, fill="steelblue")) + geom_histogram() +           # histogram of the data
+  labs(x="Steps", y="Count") + ggtitle("Steps by Day") +                       # appropriate labels
+  theme_bw() + theme(plot.title = element_text(hjust = 0.5)) + guides(fill=F)  # a bit of personalization
+```
+
+Our goal, of course, is to report the mean and median of the number of steps taken per day.
+```{r}
+mean(ad.by_day$steps)
+median(ad.by_day$steps)
+```
 
 ## What is the average daily activity pattern?
 
+Similar to the first step in the previous section, let's `aggregate` the data per interval. This time, we're using the average across all the given days.
+```{r}
+ad.by_int <- aggregate(steps ~ interval, act_data, mean)
+```
 
+Let's create a time-series plot using the base plotting system's `plot` function.
+```{r}
+plot(ad.by_int$interval, ad.by_int$steps, type="l", main="Steps by Interval", xlab="Interval", ylab="Steps", col="steelblue")
+```
+
+To find the interval with the maximum steps, we run the following line.
+```{r, results="hide"}
+ad.by_int$interval[which.max(ad.by_int$steps)]
+```
+This tells us that our max-steps interval is the one starting at `r ad.by_int$interval[which.max(ad.by_int$steps)]`
 
 ## Imputing missing values
 
+The number of missing step values can be found using the next line.
+```{r, results="hide"}
+sum(is.na(act_data$steps))
+```
+There are `r sum(is.na(act_data$steps))` missing values in the dataset.
+
+People usually have similar routines on the same day each week. Remember the `weekday` column we created in preprocessing? Let's use that.  
+For missing values, we'll fill in averages of the same weekday and interval, but before that we need to create a dataset with those averages.
+```{r}
+ad.by_both <- aggregate(steps ~ interval + weekday, act_data, mean)
+```
+
+Let's make a separate dataset to use and populate it with matched data.
+```{r}
+ad.imputed <- transform(act_data, steps = ifelse(is.na(act_data$steps), ad.by_both$steps[match(ad.by_both$interval, act_data$interval) & match(ad.by_both$weekday, act_data$weekday)], act_data$steps))
+```
+
+Now, let's plot both datasets on a histogram.
+```{r}
+hist(steps_by_day_i$steps, main = paste("Total Steps Each Day"), col="blue", xlab="Number of Steps")
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
