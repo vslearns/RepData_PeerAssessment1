@@ -1,5 +1,7 @@
 ---
-output: github_document
+output: 
+  html_document: 
+    keep_md: true
 ---
 
 # Reproducible Research: Peer Assessment 1
@@ -18,8 +20,8 @@ Next, let's read in the data.
 if (!file.exists("activity.csv")) unzip("activity.zip")
 if (!exists("act_data")) act_data <- read.csv("activity.csv")
 ```
-
 Properly, we should have to get rid of all the NA values in our dataset. However, we can safely ignore this step for now.
+
 
 In terms of preprocessing, we just want to add a weekday column to our dataset. This will help us out in the imputation section.
 ```{r}
@@ -30,6 +32,7 @@ Let's check that our data loaded properly. The first few rows should have NA val
 ```{r}
 head(act_data)
 ```
+
 
 ## What is mean total number of steps taken per day?
 
@@ -45,11 +48,13 @@ ggplot(ad.by_day, aes(steps, fill="steelblue")) + geom_histogram() +           #
   theme_bw() + theme(plot.title = element_text(hjust = 0.5)) + guides(fill=F)  # a bit of personalization
 ```
 
+
 Our goal, of course, is to report the mean and median of the number of steps taken per day.
 ```{r}
 mean(ad.by_day$steps)
 median(ad.by_day$steps)
 ```
+
 
 ## What is the average daily activity pattern?
 
@@ -64,11 +69,13 @@ plot(ad.by_int$interval, ad.by_int$steps, type="l", main="Steps by Interval",
      xlab="Interval", ylab="Steps", col="steelblue")
 ```
 
+
 To find the interval with the maximum steps, we run the following line.
 ```{r, results="hide"}
 ad.by_int$interval[which.max(ad.by_int$steps)]
 ```
 This tells us that our max-steps interval is the one starting at `r ad.by_int$interval[which.max(ad.by_int$steps)]`.
+
 
 ## Imputing missing values
 
@@ -83,12 +90,12 @@ People usually have similar routines on the same day each week. Remember the `we
 ad.by_both <- aggregate(steps ~ interval + weekday, act_data, mean)
 ```
 
+
 Printing the first few rows shows us some zero-step rows. If you think this is bizarre, realize that the first few rows show the early morning hours.
 ```{r}
 head(ad.by_both)
 ```
-
-The 600-604 minute interval on a Friday morning shows `r ad.by_both[ad.by_both$weekday=="friday" & ad.by_both$interval==600,]$interval`. This represents 10:00-10:04 AM, so the number of steps makes more sense.
+The 600-604 minute interval on a Friday morning shows `r ad.by_both[ad.by_both$weekday=="friday" & ad.by_both$interval==600,]$steps`. This represents 10:00-10:04 AM, so the number of steps makes more sense.
 
 Let's make a separate dataset to use and populate it with matched data. Additionally, we'll `aggregate` the daily sums for the imputed data.
 ```{r}
@@ -101,6 +108,7 @@ ad.imputed <- transform(
 
 ad.imp_by_day <- aggregate(steps ~ date, ad.imputed, sum)
 ```
+
 
 Now, let's plot histograms of both datasets, adding the original data on top of the imputed data.
 ```{r}
@@ -124,6 +132,7 @@ hist(ad.by_day$steps, main = paste("Steps by Day"), col="gold",
 legend("topright", c("Imputed", "Original"), col=c("steelblue", "gold"), lwd=2)
 ```
 
+
 Immediately, we notice that a couple of the peaks (specifically the ones between 5000 and 15000 steps) are taller with the superimposed data. Let's see how this changes our mean and median.
 ```{r}
 mean(ad.imp_by_day$steps)
@@ -135,6 +144,7 @@ For comparison's sake, let's check out the difference between the means and medi
 100 * ((mean(ad.imp_by_day$steps) - mean(ad.by_day$steps)) / mean(ad.imp_by_day$steps))        # %
 100 * ((median(ad.imp_by_day$steps) - median(ad.by_day$steps)) / median(ad.imp_by_day$steps))  # %
 ```
+
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
@@ -148,15 +158,16 @@ Let's `aggregate` based on our `interval` and `week` factors.
 ad.by_week <- aggregate(steps ~ interval + week, ad.imputed, mean)
 ```
 
+
 Now, we'll plot the two time series plots separately.
 ```{r}
 par(mfrow=c(2,1))
 
-with (ad.by_week[ad.by_week$week == "day",], plot(interval, steps, type="l", main="Steps by Interval - Weekdays", 
-     xlab="Interval", ylab="Steps", col="steelblue"))
+with (ad.by_week[ad.by_week$week == "day",], plot(interval, steps, type="l", main="Steps by Interval - Weekdays",
+                                                  xlab="Interval", ylab="Steps", col="steelblue"))
 
-with (ad.by_week[ad.by_week$week == "end",], plot(interval, steps, type="l", main="Steps by Interval - Weekends", 
-     xlab="Interval", ylab="Steps", col="firebrick"))
+with (ad.by_week[ad.by_week$week == "end",], plot(interval, steps, type="l", main="Steps by Interval - Weekends",
+                                                  xlab="Interval", ylab="Steps", col="firebrick"))
 ```
 
 To finish off our project, let's go ahead and graph the two time series plots on top of each other.
@@ -170,6 +181,9 @@ with (ad.by_week[ad.by_week$week == "end",], lines(interval, steps, type="l", co
 
 legend("topright", legend=c("Weekdays", "Weekends"), col=c("steelblue", "firebrick"), lwd=c(2,2))
 ```
-One of the most important features to note is that the y-range on the week**days** graph peaks at a bit over 200 steps, while the y-range on the week**ends** graph peaks at just around 150 steps.
+
+One of the most important features to note is that the y-range on the week*days* graph peaks at a bit over 200 steps, while the y-range on the week*ends* graph peaks at just around 150 steps.
+
 
 That concludes this project and (hopefully) satisfies all the requirements set forth by the directions. Cheers!
+
